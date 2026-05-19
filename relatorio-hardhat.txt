@@ -1,0 +1,1 @@
+Compiled 25 Solidity files successfully (evm target: cancun).

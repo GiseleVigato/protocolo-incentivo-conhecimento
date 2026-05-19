@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocolo de Incentivo ao Conhecimento - Painel Web3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #0f172a; /* Slate Dark Blue */
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container { 
+            max-width: 800px; 
+            width: 100%;
+            margin: 0 auto; 
+            background-color: #1e3a8a; /* Deep Institutional Blue */
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5); 
+        }
+
+        h1 { 
+            color: #38bdf8; /* Bright Cyan */
+            text-align: center; 
+            margin-bottom: 30px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        h2 { 
+            color: #38bdf8; 
+            border-bottom: 2px solid #3b82f6; 
+            padding-bottom: 8px; 
+            margin-top: 25px; 
+        }
+
+        h3 { color: #38bdf8; font-size: 14px; margin-top: 15px; margin-bottom: 5px; }
+
+        .card { 
+            background-color: #0b1329; /* Deep Card Background */
+            border: 1px solid #1e40af; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            color: #f1f5f9;
+        }
+
+        .btn { 
+            background-color: #3b82f6; /* Accent Blue Button */
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: bold; 
+            width: 100%; 
+            margin-top: 10px; 
+            transition: background 0.3s, transform 0.1s; 
+        }
+        
+        .btn:hover { 
+            background-color: #2563eb; 
+        }
+        
+        .btn:active {
+            transform: scale(0.98); 
+        }
+
+        .btn-secondary { background-color: #64748b; }
+        .btn-secondary:hover { background-color: #475569; }
+        .btn-danger { background-color: #ef4444; }
+        .btn-danger:hover { background-color: #dc2626; }
+
+        input { 
+            width: 97%; 
+            padding: 10px; 
+            margin-top: 8px; 
+            background-color: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #3b82f6; 
+            border-radius: 6px; 
+            font-size: 14px; 
+        }
+        
+        input::placeholder {
+            color: #64748b; 
+        }
+
+        .status { 
+            font-weight: bold; 
+            color: #7dd3fc; 
+            word-break: break-all; 
+            margin-top: 10px; 
+        }
+
+        .sub-secao { background: #1e293b; padding: 15px; border-radius: 6px; margin-top: 15px; border: 1px dashed #3b82f6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📘 Incentivo ao Conhecimento - Painel Acadêmico</h1>
+
+    <div class="card" style="border-left: 5px solid #3b82f6;">
+        <h2>🔐 Autenticação Estudantil</h2>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="btn" id="btnConectar" onclick="conectarCarteira()">Conectar MetaMask</button>
+            <button class="btn btn-danger" id="btnDesconectar" onclick="desconectarCarteira()" style="display: none; width: auto; padding: 12px 15px;">Desconectar Carteira</button>
+        </div>
+        <p class="status" id="statusCarteira">Carteira: Não conectada</p>
+    </div>
+
+    <div class="card" style="border-left: 5px solid #f59e0b;">
+        <h2>🎓 Módulo de Incentivo (NFT + 50 LearnTokens)</h2>
+        <p>Cadastre um estudante de destaque para conceder o Certificado NFT Acadêmico e uma carga inicial de fomento de 50 tokens criados na Blockchain.</p>
+        
+        <input type="text" id="enderecoEmpresa" placeholder="Endereço (0x...) do Aluno Beneficiário">
+        <button class="btn" style="background-color: #f59e0b;" onclick="premiarEmpresa()">Emitir Certificado NFT + Enviar 50 LTK</button>
+        
+        <p class="status" id="statusNFT"></p>
+    </div>
+
+    <div class="card" style="border-left: 5px solid #10b981;">
+        <h2>✍️ Dedicação Acadêmica (Jornada de Estudos)</h2>
+        <p>Aloque seus tokens LTK na jornada de estudos para gerar bônus de aprendizado com base na dedicação e indicadores econômicos.</p>
+        <input type="number" id="qtdStake" placeholder="Quantidade de LearnTokens para Dedicação">
+        <button class="btn" style="background-color: #64748b;" onclick="aprovarTokens()">1º Passo: Aprovar Utilização de Tokens</button>
+        <button class="btn" style="background-color: #10b981;" onclick="depositarStake()">2º Passo: Iniciar Jornada de Estudos</button>
+        <button class="btn btn-secondary" style="margin-top: 15px; background-color: #475569;" onclick="retirarStake()">Concluir Jornada + Resgatar Incentivos</button>
+        <p class="status" id="statusStake"></p>
+    </div>
+
+    <div class="card" style="border-left: 5px solid #8b5cf6;">
+        <h2>🏛️ Conselho Universitário Descentralizado (DAO)</h2>
+        <p>Gerencie as diretrizes de fomento à pesquisa enviando e votando em propostas diretamente na rede Sepolia.</p>
+
+        <div class="sub-secao">
+            <h3>📝 1. Cadastrar Nova Diretriz (Apenas o Reitor/Owner)</h3>
+            <input type="text" id="descProposta" placeholder="Ex: Ampliar bolsas para área de Computação Quântica">
+            <button class="btn" style="background-color: #8b5cf6;" onclick="criarPropostaDAO()">Enviar Proposta ao Conselho</button>
+        </div>
+
+        <div class="sub-secao">
+            <h3>🗳️ 2. Registrar Voto Conselheiro (Requer LearnTokens)</h3>
+            <input type="number" id="idProposta" placeholder="ID da Proposta Acadêmica (Começa em 0)">
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button class="btn" style="background-color: #6d28d9;" onclick="votarDAO(true)">Votar A Favor</button>
+                <button class="btn btn-secondary" style="background-color: #b91c1c;" onclick="votarDAO(false)">Votar Contra</button>
+            </div>
+        </div>
+
+        <div class="sub-secao">
+            <h3>📊 3. Escrutínio de Resultados</h3>
+            <input type="number" id="idConsulta" placeholder="Digitar ID da Proposta para auditoria">
+            <button class="btn btn-secondary" onclick="consultarPropostaDAO()">Buscar Dados de Votação</button>
+            <div id="resultadoConsulta" style="margin-top: 10px; font-size: 14px; line-height: 1.6;"></div>
+        </div>
+
+        <p class="status" id="statusDAO"></p>
+    </div>
+</div>
+
+<script>
+    // ENDEREÇOS DA GISELE NA SEPOLIA
+    const endereçoEcoCoin = "0xd999bfAE1d813e6f35B46f0dd84CA007B5334ef4";
+    const endereçoGreenNFT = "0xd3d17C7bb1DF2553990973969337bb22682AA3A0";
+    const endereçoStaking = "0x45bd42C2D843D7B947E53c8347b2E6c459a65152"; 
+    const endereçoGovernanca = "0x74B130c1890F13842587a0949175C2e9fE66aA44";
+
+    let provider;
+    let signer;
+
+    const abiERC20 = [
+        "function approve(address spender, uint256 amount) public returns (bool)",
+        "function mint(address to, uint256 amount) public"
+    ];
+    const abiNFT = ["function safeMint(address to) public"]; 
+    
+    // ABIs ADAPTADAS PARA OS TERMOS DO CONTRATO DA GISELE
+    const abiStaking = [
+        "function iniciarJornada(uint256 _quantidade) public", 
+        "function concluirJornada() public"
+    ];
+    const abiGovernanca = [
+        "function criarProposta(string memory _descricao) public",
+        "function votar(uint256 _propostaId, bool _apoiar) public",
+        "function propostas(uint256 index) public view returns (string memory descricao, uint256 votosFavoraveis, uint256 votosContra, bool executada)"
+    ];
+
+    async function conectarCarteira() {
+        if (!window.ethereum) {
+            alert("MetaMask não encontrada!");
+            return;
+        }
+        try {
+            const contas = await window.ethereum.request({ method: "eth_requestAccounts" });
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            
+            document.getElementById("statusCarteira").innerText = "Estudante Conectado: " + contas[0];
+            
+            const btnConectar = document.getElementById("btnConectar");
+            btnConectar.style.backgroundColor = "#10b981";
+            btnConectar.innerText = "Conectado ✔";
+            
+            document.getElementById("btnDesconectar").style.display = "block";
+        } catch (erro) {
+            console.error(erro);
+            document.getElementById("statusCarteira").innerText = "Erro ao autenticar.";
+        }
+    }
+
+    async function desconectarCarteira() {
+        signer = null;
+        provider = null;
+        document.getElementById("statusCarteira").innerText = "Carteira: Desconectada localmente.";
+        
+        const btnConectar = document.getElementById("btnConectar");
+        btnConectar.style.backgroundColor = "#3b82f6";
+        btnConectar.innerText = "Conectar MetaMask";
+        document.getElementById("btnDesconectar").style.display = "none";
+        
+        document.getElementById("statusNFT").innerText = "";
+        document.getElementById("statusStake").innerText = "";
+        document.getElementById("statusDAO").innerText = "";
+        document.getElementById("resultadoConsulta").innerHTML = "";
+
+        alert("Sessão acadêmica limpa! Altere a conta na MetaMask antes de conectar o perfil do estudante parceiro.");
+    }
+
+    function verificarConexao() {
+        if (!signer) { alert("Conecte a carteira MetaMask primeiro!"); return false; }
+        return true;
+    }
+
+    if (window.ethereum) {
+        window.ethereum.on('accountsChanged', function (accounts) {
+            if (accounts.length > 0) {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                provider.getSigner().then(s => {
+                    signer = s;
+                    document.getElementById("statusCarteira").innerText = "Estudante Conectado: " + accounts[0];
+                });
+            } else {
+                desconectarCarteira();
+            }
+        });
+    }
+
+    async function premiarEmpresa() {
+        if (!verificarConexao()) return;
+        const status = document.getElementById("statusNFT");
+        const destinatario = document.getElementById("enderecoEmpresa").value.trim();
+
+        if (!ethers.isAddress(destinatario)) {
+            alert("Por favor, insira um endereço de carteira válido.");
+            return;
+        }
+
+        try {
+            status.innerHTML = "⏳ <b>Passo 1/2:</b> Emitindo Certificado NFT Acadêmico... Confirme na MetaMask.";
+            const contratoNFT = new ethers.Contract(endereçoGreenNFT, abiNFT, signer);
+            const txNFT = await contratoNFT.safeMint(destinatario);
+            status.innerHTML = "⛏️ Processando NFT na rede Sepolia...";
+            await txNFT.wait();
+
+            status.innerHTML = "⏳ <b>Passo 2/2:</b> Emitindo bolsa de 50 LearnTokens... Confirme a transação.";
+            const contratoToken = new ethers.Contract(endereçoEcoCoin, abiERC20, signer);
+            const cinquentaTokens = ethers.parseUnits("50", 18); 
+            const txToken = await contratoToken.mint(destinatario, cinquentaTokens);
+            status.innerHTML = "⛏️ Alocando os tokens LTK do estudante na Blockchain...";
+            await txToken.wait();
+
+            status.innerHTML = "🎉 <b>Sucesso!</b> O aluno recebeu o Certificado NFT e uma carga inicial de 50 LTK de incentivo.";
+            document.getElementById("enderecoEmpresa").value = "";
+        } catch (erro) {
+            console.error(erro);
+            status.innerHTML = "❌ Falha na execução. Verifique se você está autenticado como o <b>Dono (Reitor)</b> do protocolo.";
+        }
+    }
+
+    async function aprovarTokens() {
+        if (!verificarConexao()) return;
+        const status = document.getElementById("statusStake");
+        const quantidade = document.getElementById("qtdStake").value;
+        if (!quantidade || quantidade <= 0) { alert("Insira uma quantidade de tokens válida."); return; }
+        try {
+            status.innerText = "Aguardando homologação do limite na carteira...";
+            const contratoToken = new ethers.Contract(endereçoEcoCoin, abiERC20, signer);
+            const valorFormatado = ethers.parseUnits(quantidade, 18);
+            const tx = await contratoToken.approve(endereçoStaking, valorFormatado);
+            status.innerText = "Processando autorização na rede Sepolia...";
+            await tx.wait();
+            status.innerText = "Autorização Confirmada! Agora clique no 2º Passo para iniciar.";
+        } catch (erro) {
+            console.error(erro);
+            status.innerText = "Falha ao aprovar tokens de estudo.";
+        }
+    }
+
+    async function depositarStake() {
+        if (!verificarConexao()) return;
+        const status = document.getElementById("statusStake");
+        const quantidade = document.getElementById("qtdStake").value;
+        try {
+            status.innerText = "Iniciando contrato de dedicação...";
+            const contratoStaking = new ethers.Contract(endereçoStaking, abiStaking, signer);
+            const valorFormatado = ethers.parseUnits(quantidade, 18);
+            
+            // FUNÇÃO ADAPTADA: iniciarJornada()
+            const tx = await contratoStaking.iniciarJornada(valorFormatado);
+            status.innerText = "Alocando tokens na sua jornada de aprendizado... Aguarde.";
+            await tx.wait();
+            status.innerText = "Sucesso! Sua jornada de estudos está ativa e registrada na Blockchain! ✍️";
+        } catch (erro) {
+            console.error(erro);
+            status.innerText = "Erro ao iniciar jornada. Verifique se realizou o 1º Passo corretamente.";
+        }
+    }
+
+    async function retirarStake() {
+        if (!verificarConexao()) return;
+        const status = document.getElementById("statusStake");
+        try {
+            status.innerText = "Solicitando encerramento de jornada e cálculo de incentivos...";
+            const contratoStaking = new ethers.Contract(endereçoStaking, abiStaking, signer);
+            
+            // FUNÇÃO ADAPTADA: concluirJornada() com contorno para estimativa de gás
+            const tx = await contratoStaking.concluirJornada({ gasLimit: 250000 });
+            
+            status.innerText = "Processando o resgate de fundos... Aguardando mineração.";
+            await tx.wait();
+            status.innerText = "Jornada concluída com sucesso! Recompensas adicionadas ao seu saldo. 💸";
+        } catch (erro) {
+            console.error(erro);
+            status.innerHTML = "❌ <b>Restrição Criptográfica do Contrato:</b> A blockchain rejeitou a conclusão pois as regras de dedicação temporal mínima ou a validação de lote do Certificado NFT exigidas em StakingConhecimento.sol não foram atendidas.";
+        }
+    }
+
+    async function criarPropostaDAO() {
+        if (!verificarConexao()) return;
+        const status = document.getElementById("statusDAO");
+        const descricao = document.getElementById("descProposta").value;
+        if (!descricao) { alert("Digite a ementa da diretriz."); return; }
+
+        try {
+            status.innerText = "Abrindo MetaMask para registrar diretriz acadêmica...";
+            const contratoDAO = new ethers.Contract(endereçoGovernanca, abiGovernanca, signer);
+            const tx = await contratoDAO.criarProposta(descricao);
+            status.innerText = "Inserindo proposta nas atas da Blockchain...";
+            await tx.wait();
+            status.innerHTML = "🎉 <b>Diretriz acadêmica publicada no Conselho!</b> ID inicial da proposta é 0.";
+            document.getElementById("descProposta").value = "";
+        } catch (erro) {
+            console.error(erro);
+            status.innerText = "Erro ao criar proposta. Restrição: Apenas o Reitor/Owner possui essa permissão.";
+        }
+    }
+
+    async function votarDAO(votoAFavor) {
+        if (!verificarConexao()) return;
+        const status = document.getElementById("statusDAO");
+        const id = document.getElementById("idProposta").value;
+        if (id === "") { alert("Por favor, informe o ID da Proposta."); return; }
+
+        try {
+            status.innerText = "Abrindo MetaMask para assinar voto de conselheiro...";
+            const contratoDAO = new ethers.Contract(endereçoGovernanca, abiGovernanca, signer);
+            const tx = await contratoDAO.votar(id, votoAFavor);
+            status.innerText = "Computando o seu poder de voto na rede Sepolia...";
+            await tx.wait();
+            status.innerText = `Voto auditado e computado com sucesso para a proposta #${id}! 🏛️`;
+        } catch (erro) {
+            console.error(erro);
+            status.innerText = "Erro ao votar. Causas: ID inválido, voto já registrado ou saldo de LearnTokens zerado.";
+        }
+    }
+
+    async function consultarPropostaDAO() {
+        if (!verificarConexao()) return;
+        const painelResultado = document.getElementById("resultadoConsulta");
+        const id = document.getElementById("idConsulta").value;
+        if (id === "") { alert("Digite o ID para auditoria."); return; }
+
+        try {
+            painelResultado.innerHTML = "<i>Consultando livros fiscais da Blockchain...</i>";
+            const contratoDAO = new ethers.Contract(endereçoGovernanca, abiGovernanca, provider);
+            const dados = await contratoDAO.propostas(id);
+            const votosFavoraveisFormatados = ethers.formatUnits(dados.votosFavoraveis, 18);
+            const votosContraFormatados = ethers.formatUnits(dados.votosContra, 18);
+            
+            painelResultado.innerHTML = `
+                📌 <b>Diretriz #${id}:</b> ${dados.descricao}<br>
+                🟩 <b>Poder de Voto Favorável:</b> ${parseFloat(votosFavoraveisFormatados).toFixed(2)} LTK<br>
+                🟥 <b>Poder de Voto Contrário:</b> ${parseFloat(votosContraFormatados).toFixed(2)} LTK<br>
+                ⚙️ <b>Homologada e Executada:</b> ${dados.executada ? "Sim ✅" : "Não ⏳"}
+            `;
+        } catch (erro) {
+            console.error(erro);
+            painelResultado.innerHTML = "<span style='color:red;'>Erro na busca. ID de diretriz acadêmica inexistente.</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
