@@ -48,6 +48,11 @@ Buscando resguardar o protocolo contra falhas de estouro de pilha ou falhas de l
 
 ---
 
+## 🎬 Vídeo Demonstrativo
+[Assista aqui à demonstração prática do protocolo](https://youtu.be/iJ_DSKsjCJY)
+
+---
+
 ## 💻 Como Executar e Testar a Interface Web3 (Frontend)
 
 O painel do aluno e da reitoria foi desenvolvido utilizando HTML e JavaScript nativos, alimentados assincronamente pela biblioteca **Ethers.js (v6)** para comunicação direta com carteiras de extensão baseadas em navegadores.
